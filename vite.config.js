@@ -1,11 +1,11 @@
-import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vite'
-import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa';
+import tailwindcss from '@tailwindcss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), VitePWA(), tailwindcss(),({
+  plugins: [react(), tailwindcss(), VitePWA({
     registerType: 'autoUpdate',
     includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png', 'LOGORN.png'],
     injectRegister: false,
@@ -16,10 +16,39 @@ export default defineConfig({
     },
 
     manifest: {
-      name: 'Resep-Nusantara',
-      short_name: 'Resep-Nusantara',
-      description: 'Resep Makanan dan Minuman Indonesia',
-      theme_color: '#ffffff',
+      name: 'Resep Nusantara',
+      short_name: 'Resep Nusantara',
+      description: 'Aplikasi Resep Makanan dan Minuman Khas Indonesia',
+      theme_color: '#2563eb', // Biru
+      background_color: '#ffffff', // Putih
+      display: 'standalone',
+      scope: '/',
+      start_url: '/',
+      orientation: 'portrait',
+      icons: [
+        {
+          src: '/pwa-64x64.png',
+          sizes: '64x64',
+          type: 'image/png'
+        },
+        {
+          src: '/pwa-192x192.png',
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: '/pwa-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'any'
+        },
+        {
+          src: '/maskable-icon-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable'
+        }
+      ]
     },
 
     workbox: {
