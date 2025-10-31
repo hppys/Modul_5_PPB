@@ -1,6 +1,11 @@
 // src/main.jsx
 import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+
+// 1. Impor DataProvider kita
+import { DataProvider } from './context/DataContext';
+
+// ... (semua import halaman dan komponen Anda lainnya) ...
 import SplashScreen from './pages/SplashScreen';
 import HomePage from './pages/HomePage';
 import MakananPage from './pages/MakananPage';
@@ -14,11 +19,10 @@ import MobileNavbar from './components/navbar/MobileNavbar';
 import './index.css';
 import PWABadge from './PWABadge';
 
+// AppRoot Anda TIDAK BERUBAH SAMA SEKALI
 function AppRoot() {
   const [showSplash, setShowSplash] = useState(true);
   const [currentPage, setCurrentPage] = useState('home');
-  
-  // State baru untuk mengelola tampilan aplikasi
   const [mode, setMode] = useState('list'); // 'list', 'detail', 'create', 'edit'
   const [selectedRecipeId, setSelectedRecipeId] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('makanan');
@@ -28,7 +32,6 @@ function AppRoot() {
     setShowSplash(false);
   };
 
-  // Navigasi utama (Beranda, Makanan, Minuman)
   const handleNavigation = (page) => {
     setCurrentPage(page);
     setMode('list');
@@ -36,50 +39,41 @@ function AppRoot() {
     setEditingRecipeId(null);
   };
 
-  // Dipanggil saat tombol "Buat Resep" diklik
   const handleCreateRecipe = () => {
     setMode('create');
   };
 
-  // Dipanggil saat kartu resep diklik
   const handleRecipeClick = (recipeId, category) => {
     setSelectedRecipeId(recipeId);
     setSelectedCategory(category || currentPage);
     setMode('detail');
   };
 
-  // Dipanggil saat tombol "Edit" di halaman detail diklik
   const handleEditRecipe = (recipeId) => {
     setEditingRecipeId(recipeId);
     setMode('edit');
   };
 
-  // Dipanggil saat tombol "Kembali" diklik (dari detail, create, edit)
   const handleBack = () => {
     setMode('list');
     setSelectedRecipeId(null);
     setEditingRecipeId(null);
   };
 
-  // Dipanggil setelah resep baru berhasil dibuat
   const handleCreateSuccess = (newRecipe) => {
     alert('Resep berhasil dibuat!');
     setMode('list');
-    // Arahkan pengguna ke kategori resep yang baru dibuat
     if (newRecipe && newRecipe.category) {
       setCurrentPage(newRecipe.category);
     }
   };
 
-  // Dipanggil setelah resep berhasil diedit
   const handleEditSuccess = (updatedRecipe) => {
     alert('Resep berhasil diperbarui!');
     setMode('list');
   };
 
-  // Fungsi untuk menentukan komponen mana yang akan ditampilkan
   const renderCurrentPage = () => {
-    // Tampilkan halaman Buat Resep
     if (mode === 'create') {
       return (
         <CreateRecipePage
@@ -88,8 +82,6 @@ function AppRoot() {
         />
       );
     }
-
-    // Tampilkan halaman Edit Resep
     if (mode === 'edit') {
       return (
         <EditRecipePage
@@ -99,8 +91,6 @@ function AppRoot() {
         />
       );
     }
-
-    // Tampilkan halaman Detail Resep
     if (mode === 'detail') {
       return (
         <RecipeDetail
@@ -111,8 +101,6 @@ function AppRoot() {
         />
       );
     }
-
-    // Tampilkan halaman Daftar (Beranda, Makanan, Minuman)
     switch (currentPage) {
       case 'home':
         return <HomePage 
@@ -141,7 +129,6 @@ function AppRoot() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navbar hanya tampil saat mode 'list' */}
       {mode === 'list' && (
         <>
           <DesktopNavbar 
@@ -156,19 +143,19 @@ function AppRoot() {
           />
         </>
       )}
-      
-      {/* Konten Utama */}
       <main className="min-h-screen">
         {renderCurrentPage()}
       </main>
-
       <PWABadge />
     </div>
   );
 }
 
+// 2. Bungkus AppRoot dengan DataProvider
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AppRoot />
+    <DataProvider>
+      <AppRoot />
+    </DataProvider>
   </StrictMode>,
 )

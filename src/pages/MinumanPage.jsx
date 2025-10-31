@@ -1,6 +1,7 @@
 // src/pages/MinumanPage.jsx
-import { useState } from 'react';
-import { useRecipes } from '../hooks/useRecipes';
+import { useState, useEffect } from 'react';
+import { useData } from '../context/DataContext'; // Impor hook cache kita
+import recipeService from '../services/recipeService'; // Impor service
 import RecipeGrid from '../components/minuman/RecipeGrid';
 import AdvancedFilter from '../components/common/AdvancedFilter';
 
@@ -14,28 +15,41 @@ export default function MinumanPage({ onRecipeClick }) {
   });
   const [page, setPage] = useState(1);
 
-  // Fetch recipes from API with all filters
-  const { recipes, loading, error, pagination, refetch } = useRecipes({
-    category: 'minuman',
+  const { cache, loading, error, fetchAndCache } = useData();
+
+  const queryParams = {
+    category: 'minuman', // Ganti ke minuman
     search: searchQuery || undefined,
     difficulty: filters.difficulty || undefined,
     page,
     limit: 12,
     sort_by: filters.sortBy,
     order: filters.order
-  });
+  };
+  
+  const cacheKey = `recipes_${JSON.stringify(queryParams)}`;
+
+  useEffect(() => {
+    fetchAndCache(cacheKey, () => recipeService.getRecipes(queryParams));
+  }, [cacheKey, fetchAndCache]);
+
+  const data = cache[cacheKey];
+  const isLoading = loading[cacheKey];
+  const errorMessage = error[cacheKey];
+
+  const recipes = data?.data || [];
+  const pagination = data?.pagination;
 
   const handleSearchChange = (query) => {
     setSearchQuery(query);
-    setPage(1); // Reset to first page on search
+    setPage(1); 
   };
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    setPage(1); // Reset to first page on filter change
+    setPage(1); 
   };
 
-  // Client-side filter for prep time (since API might not support it)
   const filteredRecipes = filters.prepTimeMax
     ? recipes.filter(recipe => recipe.prep_time <= parseInt(filters.prepTimeMax))
     : recipes;
@@ -43,7 +57,6 @@ export default function MinumanPage({ onRecipeClick }) {
   return (
     <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-cyan-50 pb-20 md:pb-8">
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
-        {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl md:text-5xl font-bold text-slate-800 mb-4">
             Resep Minuman
@@ -53,29 +66,26 @@ export default function MinumanPage({ onRecipeClick }) {
           </p>
         </div>
 
-        {/* Advanced Filter */}
         <AdvancedFilter
           onSearchChange={handleSearchChange}
           onFilterChange={handleFilterChange}
           initialFilters={{ ...filters, search: searchQuery }}
         />
 
-        {/* Loading State */}
-        {loading && (
+        {isLoading && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="mt-4 text-slate-600">Memuat resep...</p>
           </div>
         )}
 
-        {/* Error State */}
-        {error && (
+        {errorMessage && (
           <div className="text-center py-12">
             <div className="bg-red-50 border border-red-200 rounded-lg p-6">
               <p className="text-red-600 font-semibold mb-2">Terjadi Kesalahan</p>
-              <p className="text-red-500">{error}</p>
+              <p className="text-red-500">{errorMessage}</p> 
               <button
-                onClick={refetch}
+                onClick={() => fetchAndCache(cacheKey, () => recipeService.getRecipes(queryParams), { force: true })}
                 className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
                 Coba Lagi
@@ -84,10 +94,9 @@ export default function MinumanPage({ onRecipeClick }) {
           </div>
         )}
 
-        {/* Recipes Grid */}
-        {!loading && !error && (
+        {!isLoading && !errorMessage && (
           <>
-            {recipes.length === 0 ? (
+            {filteredRecipes.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-600 text-lg">
                   Tidak ada resep ditemukan
@@ -100,7 +109,6 @@ export default function MinumanPage({ onRecipeClick }) {
               <RecipeGrid recipes={filteredRecipes} onRecipeClick={onRecipeClick} />
             )}
 
-            {/* Pagination */}
             {pagination && pagination.total_pages > 1 && (
               <div className="mt-12 flex flex-col md:flex-row items-center justify-center gap-4">
                 <button
